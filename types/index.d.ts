@@ -13,9 +13,17 @@ export interface PubsubBroker {
 }
 
 export interface PubsubBrokerDriver {
-  subscribe(topicKey: string, callback: (payload: any) => Promise<any>);
-  unsubscribe(subscriptionId: string);
-  publish(topicKey: string, payload: any);
+  subscribe(topicKey: string, callback: (payload: any) => Promise<any>): Promise<DriverSubscriptionResult>;
+  unsubscribe(subscriptionId: string): Promise<void>;
+  publish(topicKey: string, payload: any): Promise<DriverPublishResult>;
+}
+
+export interface DriverSubscriptionResult {
+  subscriptionId: string;
+}
+
+export interface DriverPublishResult {
+  numPublished: number;
 }
 
 export interface TopicOptions {

@@ -1,5 +1,5 @@
 
-import { PubsubBrokerDriver } from '../../types';
+import { PubsubBrokerDriver, DriverSubscriptionResult, DriverPublishResult } from '../../types';
 
 export default class InMemoryDriver implements PubsubBrokerDriver {
 
@@ -9,15 +9,15 @@ export default class InMemoryDriver implements PubsubBrokerDriver {
     this.callbackMap = {};
   }
 
-  public subscribe(topicKey, callback: (payload: any) => Promise<any>) {
-    
+  public async subscribe(topicKey, callback: (payload: any) => Promise<any>): Promise<DriverSubscriptionResult> {
+    return null;
   }
 
-  public unsubscribe() {
-
+  public async unsubscribe(): Promise<void> {
+    return;
   }
 
-  public publish(topicKey: string, payload: any) {
-
+  public async publish(topicKey: string, payload: any): Promise<DriverPublishResult> {
+    return null;
   }
 }
