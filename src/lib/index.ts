@@ -1,6 +1,7 @@
 
-import { PubsubBroker, Topic, PublishResult, TopicOptions } from '../../types';
+import * as crypto from 'crypto';
 
+import { PubsubBroker, Topic, PublishResult, TopicOptions } from '../../types';
 import InMemoryDriver from './in-memory-driver';
 
 export const Broker: PubsubBroker = {
@@ -19,7 +20,6 @@ export const Broker: PubsubBroker = {
 
   subscribe: async (topicExpr: string, callback: (payload: any) => void): Promise<Topic> => {
     let signature = BrokerHelper.translateFunctionToSignature(callback);
-    console.log(signature);
     return null;
   },
 
@@ -33,7 +33,9 @@ export const Broker: PubsubBroker = {
 }
 
 const BrokerHelper = {
+
   translateFunctionToSignature: (func: (payload: any) => void) => {
-    //TODO: must find methods to get function key as string for function instance.
+    let hashed = crypto.createHash('sha256').update(func.toString()).digest('hex');
+    return hashed;
   }
 }

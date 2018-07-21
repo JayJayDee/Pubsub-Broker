@@ -2,7 +2,10 @@
 import * as Pubsub from '../lib';
 
 (async function() {
-  Pubsub.Broker.subscribe('some-topic', (payload: any) => {
-
+  let resp = await Pubsub.Broker.subscribe('some-topic', (payload: any) => {
+    console.log('message received!');
+    console.log(payload);
   });
+
+  
 })();
