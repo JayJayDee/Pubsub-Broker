@@ -27,7 +27,7 @@ export interface DriverPublishResult {
 }
 
 export interface TopicOptions {
-  maxSubscribers?: number;
+  maxSubscribers: number;
 }
 
 export interface Topic {

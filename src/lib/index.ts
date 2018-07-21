@@ -1,6 +1,7 @@
 
 import * as crypto from 'crypto';
 
+import { SubscriptionLimitExceedError } from './errors';
 import { PubsubBroker, Topic, PublishResult, TopicOptions } from '../../types';
 import InMemoryDriver from './in-memory-driver';
 
@@ -9,32 +10,54 @@ export const Broker: PubsubBroker = {
   callbackMap: {},
   optionsMap: {},
 
-  createTopic: async (topicExpr: string, opts?: TopicOptions): Promise<void> => {
+  createTopic: async function(topicExpr: string, opts?: TopicOptions): Promise<void> {
     this.callbackMap[topicExpr] = {};
+    if (opts) {
+      this.optionsMap[topicExpr] = opts;
+    }
     return null;
   },
 
-  listTopics: async (): Promise<Topic[]> => {
+  listTopics: async function(): Promise<Topic[]> {
     return [];
   },
 
-  subscribe: async (topicExpr: string, callback: (payload: any) => void): Promise<Topic> => {
-    let signature = BrokerHelper.translateFunctionToSignature(callback);
+  subscribe: async function(topicExpr: string, callback: (payload: any) => void): Promise<Topic> {
+    let signature = BrokerHelper.generateCallbackSignature(callback);
+    let options: TopicOptions = this.optionsMap[topicExpr];
+
+    if (!options) {
+      options = {
+        maxSubscribers: -1
+      };
+    }
+
+    if (!this.callbackMap[topicExpr]) {
+      this.callbackMap[topicExpr] = {};
+    }
+
+    if (Object.keys(this.callbackMap[topicExpr]).length >= options.maxSubscribers &&
+          options.maxSubscribers !== -1) {
+      throw new SubscriptionLimitExceedError(topicExpr);
+    }
+
+    //TODO: connect to driver.
+    
     return null;
   },
 
-  unsubscribe: async (subscriptionId: string): Promise<void> => {
+  unsubscribe: async function(subscriptionId: string): Promise<void> {
 
   },
 
-  publish: async (topicExpr: string, payload: any): Promise<PublishResult> => {
+  publish: async function(topicExpr: string, payload: any): Promise<PublishResult> {
     return null;
   }
 }
 
 const BrokerHelper = {
 
-  translateFunctionToSignature: (func: (payload: any) => void) => {
+  generateCallbackSignature: (func: (payload: any) => void) => {
     let hashed = crypto.createHash('sha256').update(func.toString()).digest('hex');
     return hashed;
   }
