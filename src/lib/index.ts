@@ -19,7 +19,7 @@ export const Broker: PubsubBroker = {
   },
 
   listTopics: async function(): Promise<Topic[]> {
-    return [];
+    return this.callbackMap.keys();
   },
 
   subscribe: async function(topicExpr: string, callback: (payload: any) => void): Promise<Topic> {
