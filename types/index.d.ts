@@ -3,6 +3,7 @@ export interface PubsubBroker {
   driver: PubsubBrokerDriver;
   callbackMap: { [topicExpr: string]: { [funcSignature: string]: (payload: any) => void }};
   optionsMap: { [topicExpr: string]: TopicOptions };
+  signatureMap: { [callbackSignature: string]: SubscribePayload };
 
   createTopic(topicExpr: string, opts?: TopicOptions): Promise<Topic>;
   listTopics(): Promise<Topic[]>;
@@ -42,6 +43,12 @@ export interface Topic {
   topicExpr: string;
   options: TopicOptions;
   numSubscribers: number;
+}
+
+export interface SubscribePayload {
+  topicExpr: string;
+  oneTimeOnly?: boolean;
+  callback: (payload: any) => void;
 }
 
 export interface SubscribeResult {

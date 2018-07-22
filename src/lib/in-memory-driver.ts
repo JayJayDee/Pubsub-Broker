@@ -29,7 +29,7 @@ export default class InMemoryDriver implements PubsubBrokerDriver {
   }
 
   private queueConsumeProc() {
-    const self = this;
+    const self: InMemoryDriver = this;
     setTimeout(() => {
       let consumeSize = self.options.consumeSize;
       if (self.options.consumeSize > self.payloadQueue.length) {

@@ -4,13 +4,14 @@ import * as minimatch from 'minimatch';
 import * as _ from 'lodash';
 
 import { SubscriptionLimitExceedError } from './errors';
-import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult, DriverPublishPayload } from '../../types';
+import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult, DriverPublishPayload, SubscribePayload } from '../../types';
 import InMemoryDriver from './in-memory-driver';
 
 export const Broker: PubsubBroker = {
   driver: new InMemoryDriver(),
   callbackMap: {},
   optionsMap: {},
+  signatureMap: {},
 
   createTopic: async function(topicExpr: string, opts?: TopicOptions): Promise<Topic> {
     this.callbackMap[topicExpr] = {};
@@ -62,8 +63,13 @@ export const Broker: PubsubBroker = {
     }
 
     this.callbackMap[topicExpr][signature] = callback;
-    //TODO: connect to driver.
-    
+    let subscribePayload: SubscribePayload = {
+      topicExpr: topicExpr,
+      oneTimeOnly: false,
+      callback: callback
+    }; 
+    this.signatureMap[signature] = subscribePayload;
+
     let topicOpts = this.optionsMap[topicExpr];
     if (!topicOpts) {
       topicOpts = null;
@@ -103,7 +109,20 @@ export const Broker: PubsubBroker = {
 }
 
 Broker.driver.registerNotifyCallback((payloads: DriverPublishPayload[]) => {
-  console.log(payloads);
+  let groupped: any = _.chain(payloads)
+    .groupBy((elem: DriverPublishPayload) => elem.callbackSignature)
+    .map((grouppedPayloads: DriverPublishPayload[], callbackSignature: string) => {
+      return {
+        callbackSignature: callbackSignature,
+        payloads: _.map(grouppedPayloads, (elem: DriverPublishPayload) => elem.payload)
+      };
+    })  
+    .value()
+    .forEach((elem) => {
+      if (Broker.signatureMap[elem.callbackSignature]) {
+        Broker.signatureMap[elem.callbackSignature].callback(elem.payloads);
+      }
+    });
 });
 
 const BrokerHelper = {
