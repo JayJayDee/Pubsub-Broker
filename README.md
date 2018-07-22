@@ -10,7 +10,7 @@ node v8.10 or above. (async/await)
 
 ## examples
 
-#### simple pub-sub
+### simple pub-sub
 ```javascript
 (async function() {
   await Pubsub.Broker.subscribe('some-topic1', (payload: any) => {
@@ -34,7 +34,7 @@ node v8.10 or above. (async/await)
 })();
 ```
 
-#### restricted topic
+### restricted topic
 the topic name `restricted-topic` created with `maxSubscribers: 1`, so following code fires exception.
 ```javascript
 (async function() {
