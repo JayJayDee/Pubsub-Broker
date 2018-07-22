@@ -4,7 +4,7 @@ import * as minimatch from 'minimatch';
 import * as _ from 'lodash';
 
 import { SubscriptionLimitExceedError } from './errors';
-import { PubsubBroker, Topic, PublishResult, TopicOptions } from '../../types';
+import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult } from '../../types';
 import InMemoryDriver from './in-memory-driver';
 
 export const Broker: PubsubBroker = {
@@ -69,11 +69,14 @@ export const Broker: PubsubBroker = {
     const self: PubsubBroker = this;
     let signatures: string[] = _.chain(Object.keys(this.callbackMap))
       .filter((elem: string) => minimatch(elem, topicExpr))
-      .map((elem: string) => _.map(self.callbackMap[elem], (value: any) => value))
+      .map((elem: string) => _.map(self.callbackMap[elem], (value: any, key: string) => key))
       .flatten()
       .value();
-    console.log(signatures);
-    return null;
+    let resp: DriverPublishResult = await this.driver.publish(signatures, payload);
+    return {
+      topicExpr: topicExpr,
+      numPublished: resp.numPublished
+    };
   }
 }
 

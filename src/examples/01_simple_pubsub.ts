@@ -14,4 +14,8 @@ import * as Pubsub from '../lib';
   await Pubsub.Broker.publish('some-*', {
     test: 'test=data'
   });
+
+  await Pubsub.Broker.publish('some-topic', {
+    test: 'post-data'
+  });
 })();
