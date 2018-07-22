@@ -2,37 +2,42 @@
 import * as _ from 'lodash';
 
 import { PubsubBrokerDriver, DriverSubscriptionResult, DriverPublishResult, DriverPublishPayload } from '../../types';
-import { InMemoryPayload, InMemoryDriverOptions } from '../../types/in-memory-driver';
+import { InMemoryDriverOptions } from '../../types/in-memory-driver';
 
 export default class InMemoryDriver implements PubsubBrokerDriver {
 
   private options: InMemoryDriverOptions;
   private payloadQueue: Array<DriverPublishPayload>;
 
-  private notifyCallback: (callbackSignatures: string[], payload: any) => void;
+  private notifyCallback: (payloads: DriverPublishPayload[]) => void;
 
   constructor(opts?: InMemoryDriverOptions) {
     this.payloadQueue = [];
     if (!opts) {
       opts = {
         maxQueueSize: 10,
-        consumeIntervalInMs: 100
+        consumeSize: 2,
+        consumeIntervalInMs: 100,
       };
     }
     this.options = opts;
     this.queueConsumeProc();
   }
 
-  public registerNotifyCallback(notifyCallback: (callbackSignatures: string[], payload: any) => void) {
+  public registerNotifyCallback(notifyCallback: (payloads: DriverPublishPayload[]) => void) {
     this.notifyCallback = notifyCallback;
   }
 
   private queueConsumeProc() {
     const self = this;
     setTimeout(() => {
-      let consumed: DriverPublishPayload = self.payloadQueue.shift();
-      if (consumed && self.notifyCallback) {
-        console.log(consumed);
+      let consumeSize = self.options.consumeSize;
+      if (self.options.consumeSize > self.payloadQueue.length) {
+        consumeSize = self.payloadQueue.length; 
+      }
+      let consumed: DriverPublishPayload[] = self.payloadQueue.splice(0, consumeSize);
+      if (consumed.length > 0 && self.notifyCallback) {
+        self.notifyCallback(consumed);
       }
       self.queueConsumeProc();
     }, this.options.consumeIntervalInMs);

@@ -13,7 +13,7 @@ export interface PubsubBroker {
 }
 
 export interface PubsubBrokerDriver {
-  registerNotifyCallback(callback: (callbackSignatures: string[], payload: any) => void): void;
+  registerNotifyCallback(callback: (payloads: DriverPublishPayload[]) => void): void;
 
   subscribe(topicKey: string, callbackSignature: string): Promise<DriverSubscriptionResult>;
   unsubscribe(subscriptionId: string): Promise<void>;
@@ -35,6 +35,7 @@ export interface DriverPublishResult {
 
 export interface TopicOptions {
   maxSubscribers: number;
+  oneTimeOnly: boolean;
 }
 
 export interface Topic {

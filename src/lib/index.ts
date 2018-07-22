@@ -25,7 +25,20 @@ export const Broker: PubsubBroker = {
   },
 
   listTopics: async function(): Promise<Topic[]> {
-    return this.callbackMap.keys();
+    const self: PubsubBroker = this;
+    let topics: Topic[] = _.map(Object.keys(this.callbackMap), (topicExpr: string) => {
+      let topicOpts: TopicOptions = null;
+      if (self.optionsMap[topicExpr]) {
+        topicOpts = self.optionsMap[topicExpr];
+      }
+      let topic: Topic = {
+        topicExpr: topicExpr,
+        options: topicOpts,
+        numSubscribers: Object.keys(this.callbackMap[topicExpr]).length
+      };
+      return topic;
+    }); 
+    return topics;
   },
 
   subscribe: async function(topicExpr: string, callback: (payload: any) => void): Promise<Topic> {
@@ -34,6 +47,7 @@ export const Broker: PubsubBroker = {
 
     if (!options) {
       options = {
+        oneTimeOnly: false,
         maxSubscribers: -1
       };
     }
@@ -88,10 +102,9 @@ export const Broker: PubsubBroker = {
   },
 }
 
-Broker.driver.registerNotifyCallback((callbackSignatures: string[], payload: any) => {
-  console.log(callbackSignatures);
-  console.log(payload);
-}); 
+Broker.driver.registerNotifyCallback((payloads: DriverPublishPayload[]) => {
+  console.log(payloads);
+});
 
 const BrokerHelper = {
   generateCallbackSignature: (func: (payload: any) => void) => {

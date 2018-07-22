@@ -1,10 +1,6 @@
 
 export interface InMemoryDriverOptions {
   maxQueueSize: number;
+  consumeSize: number;
   consumeIntervalInMs: number;
-}
-
-export interface InMemoryPayload {
-  callbackSignatures: string[];
-  payload: any;
 }
