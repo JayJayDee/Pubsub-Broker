@@ -1,5 +1,7 @@
 
 import * as crypto from 'crypto';
+import * as minimatch from 'minimatch';
+import * as _ from 'lodash';
 
 import { SubscriptionLimitExceedError } from './errors';
 import { PubsubBroker, Topic, PublishResult, TopicOptions } from '../../types';
@@ -10,12 +12,16 @@ export const Broker: PubsubBroker = {
   callbackMap: {},
   optionsMap: {},
 
-  createTopic: async function(topicExpr: string, opts?: TopicOptions): Promise<void> {
+  createTopic: async function(topicExpr: string, opts?: TopicOptions): Promise<Topic> {
     this.callbackMap[topicExpr] = {};
     if (opts) {
       this.optionsMap[topicExpr] = opts;
     }
-    return null;
+    return {
+      topicExpr: topicExpr,
+      options: opts,
+      numSubscribers: 0
+    };
   },
 
   listTopics: async function(): Promise<Topic[]> {
@@ -41,9 +47,18 @@ export const Broker: PubsubBroker = {
       throw new SubscriptionLimitExceedError(topicExpr);
     }
 
+    this.callbackMap[topicExpr][signature] = callback;
     //TODO: connect to driver.
     
-    return null;
+    let topicOpts = this.optionsMap[topicExpr];
+    if (!topicOpts) {
+      topicOpts = null;
+    }
+    return {
+      topicExpr: topicExpr,
+      options: topicOpts,
+      numSubscribers: Object.keys(this.callbackMap[topicExpr]).length
+    };
   },
 
   unsubscribe: async function(subscriptionId: string): Promise<void> {
@@ -51,6 +66,13 @@ export const Broker: PubsubBroker = {
   },
 
   publish: async function(topicExpr: string, payload: any): Promise<PublishResult> {
+    const self: PubsubBroker = this;
+    let signatures: string[] = _.chain(Object.keys(this.callbackMap))
+      .filter((elem: string) => minimatch(elem, topicExpr))
+      .map((elem: string) => _.map(self.callbackMap[elem], (value: any) => value))
+      .flatten()
+      .value();
+    console.log(signatures);
     return null;
   }
 }

@@ -9,7 +9,7 @@ export default class InMemoryDriver implements PubsubBrokerDriver {
     this.callbackMap = {};
   }
 
-  public async subscribe(topicKey, callback: (payload: any) => Promise<any>): Promise<DriverSubscriptionResult> {
+  public async subscribe(topicKey, callbackSignature: string): Promise<DriverSubscriptionResult> {
     return null;
   }
 
