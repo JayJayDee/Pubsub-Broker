@@ -4,7 +4,7 @@ import * as minimatch from 'minimatch';
 import * as _ from 'lodash';
 
 import { SubscriptionLimitExceedError } from './errors';
-import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult } from '../../types';
+import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult, DriverPublishPayload } from '../../types';
 import InMemoryDriver from './in-memory-driver';
 
 export const Broker: PubsubBroker = {
@@ -67,21 +67,33 @@ export const Broker: PubsubBroker = {
 
   publish: async function(topicExpr: string, payload: any): Promise<PublishResult> {
     const self: PubsubBroker = this;
-    let signatures: string[] = _.chain(Object.keys(this.callbackMap))
+    let payloads: DriverPublishPayload[] = _.chain(Object.keys(this.callbackMap))
       .filter((elem: string) => minimatch(elem, topicExpr))
       .map((elem: string) => _.map(self.callbackMap[elem], (value: any, key: string) => key))
       .flatten()
+      .map((elem: string) => {
+        let pubPayload: DriverPublishPayload = {
+          callbackSignature: elem,
+          payload: payload          
+        };
+        return pubPayload;
+      })
       .value();
-    let resp: DriverPublishResult = await this.driver.publish(signatures, payload);
+
+    let resp: DriverPublishResult = await this.driver.publish(payloads);
     return {
       topicExpr: topicExpr,
       numPublished: resp.numPublished
     };
-  }
+  },
 }
 
-const BrokerHelper = {
+Broker.driver.registerNotifyCallback((callbackSignatures: string[], payload: any) => {
+  console.log(callbackSignatures);
+  console.log(payload);
+}); 
 
+const BrokerHelper = {
   generateCallbackSignature: (func: (payload: any) => void) => {
     let hashed = crypto.createHash('sha256').update(func.toString()).digest('hex');
     return hashed;

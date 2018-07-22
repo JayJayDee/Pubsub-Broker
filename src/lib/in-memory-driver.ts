@@ -1,11 +1,15 @@
 
-import { PubsubBrokerDriver, DriverSubscriptionResult, DriverPublishResult } from '../../types';
+import * as _ from 'lodash';
+
+import { PubsubBrokerDriver, DriverSubscriptionResult, DriverPublishResult, DriverPublishPayload } from '../../types';
 import { InMemoryPayload, InMemoryDriverOptions } from '../../types/in-memory-driver';
 
 export default class InMemoryDriver implements PubsubBrokerDriver {
 
   private options: InMemoryDriverOptions;
-  private payloadQueue: Array<InMemoryPayload>;
+  private payloadQueue: Array<DriverPublishPayload>;
+
+  private notifyCallback: (callbackSignatures: string[], payload: any) => void;
 
   constructor(opts?: InMemoryDriverOptions) {
     this.payloadQueue = [];
@@ -19,11 +23,15 @@ export default class InMemoryDriver implements PubsubBrokerDriver {
     this.queueConsumeProc();
   }
 
+  public registerNotifyCallback(notifyCallback: (callbackSignatures: string[], payload: any) => void) {
+    this.notifyCallback = notifyCallback;
+  }
+
   private queueConsumeProc() {
     const self = this;
     setTimeout(() => {
-      let consumed: InMemoryPayload = self.payloadQueue.shift();
-      if (consumed) {
+      let consumed: DriverPublishPayload = self.payloadQueue.shift();
+      if (consumed && self.notifyCallback) {
         console.log(consumed);
       }
       self.queueConsumeProc();
@@ -38,13 +46,10 @@ export default class InMemoryDriver implements PubsubBrokerDriver {
     return;
   }
 
-  public async publish(callbackSignatures: string[], payload: any): Promise<DriverPublishResult> {
-    this.payloadQueue.push({
-      callbackSignatures: callbackSignatures,
-      payload: payload
-    });
+  public async publish(payloads: DriverPublishPayload[]): Promise<DriverPublishResult> {
+    this.payloadQueue.push.apply(this.payloadQueue, payloads);
     return {
-      numPublished: callbackSignatures.length
+      numPublished: payloads.length
     };
   }
 }

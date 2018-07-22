@@ -13,13 +13,20 @@ export interface PubsubBroker {
 }
 
 export interface PubsubBrokerDriver {
+  registerNotifyCallback(callback: (callbackSignatures: string[], payload: any) => void): void;
+
   subscribe(topicKey: string, callbackSignature: string): Promise<DriverSubscriptionResult>;
   unsubscribe(subscriptionId: string): Promise<void>;
-  publish(callbackSignatures: string[], payload: any): Promise<DriverPublishResult>;
+  publish(payloads: DriverPublishPayload[]): Promise<DriverPublishResult>;
 }
 
 export interface DriverSubscriptionResult {
   subscriptionId: string;
+}
+
+export interface DriverPublishPayload {
+  callbackSignature: string;
+  payload: any;
 }
 
 export interface DriverPublishResult {
