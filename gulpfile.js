@@ -3,10 +3,12 @@ var gulp = require('gulp');
 var typescript = require('gulp-tsc');
 var runseq = require('run-sequence');
 var spawn = require('child_process').spawn;
+var mocha = require('gulp-mocha');
 
 var paths = {
   tsPath: 'src/**/*.ts',
-  jsPath: ''
+  jsPath: '',
+  testPath: 'tests/**/*.ts'
 };
 
 var node;
@@ -28,6 +30,13 @@ gulp.task('build', function(cb) {
       sourceMap: true 
     }))
     .pipe(gulp.dest(paths.jsPath));
+});
+
+gulp.task('test', function(cb) {
+  gulp.src(paths.testPath)
+    .pipe(mocha({
+      reporter: 'nyan'
+    }));
 });
  
 gulp.task('default', function () {
