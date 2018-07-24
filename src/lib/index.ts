@@ -4,7 +4,7 @@ import * as minimatch from 'minimatch';
 import * as _ from 'lodash';
 
 import { SubscriptionLimitExceedError } from './errors';
-import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult, DriverPublishPayload, SubscribePayload } from '../../types';
+import { PubsubBroker, Topic, PublishResult, TopicOptions, DriverPublishResult, DriverPublishPayload, SubscribePayload, SubscriptionResult } from '../../types';
 import InMemoryDriver from './in-memory-driver';
 
 export const Broker: PubsubBroker = {
@@ -42,8 +42,8 @@ export const Broker: PubsubBroker = {
     return topics;
   },
 
-  subscribe: async function(topicExpr: string, callback: (payload: any) => void): Promise<Topic> {
-    let signature = BrokerHelper.generateCallbackSignature(callback);
+  subscribe: async function(topicExpr: string, callback: (payload: any) => void): Promise<SubscriptionResult> {
+    let signature: string = BrokerHelper.generateCallbackSignature(callback);
     let options: TopicOptions = this.optionsMap[topicExpr];
 
     if (!options) {
@@ -77,7 +77,8 @@ export const Broker: PubsubBroker = {
     return {
       topicExpr: topicExpr,
       options: topicOpts,
-      numSubscribers: Object.keys(this.callbackMap[topicExpr]).length
+      numSubscribers: Object.keys(this.callbackMap[topicExpr]).length,
+      subscriptionId: signature
     };
   },
 

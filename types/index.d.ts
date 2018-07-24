@@ -21,6 +21,10 @@ export interface PubsubBrokerDriver {
   publish(payloads: DriverPublishPayload[]): Promise<DriverPublishResult>;
 }
 
+export interface SubscriptionResult extends Topic {
+  subscriptionId: string;
+}
+
 export interface DriverSubscriptionResult {
   subscriptionId: string;
 }
